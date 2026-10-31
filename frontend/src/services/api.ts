@@ -2,26 +2,29 @@
 
 /**
  * Centralized API Client Service for CivicPulse
- * Supports VITE_API_URL environment variable for production (Vercel)
+ * Supports VITE_API_URL environment variable for production (Render / Vercel)
  * and falls back to dynamic local resolution for development.
  */
 
 const isBrowser = typeof window !== 'undefined';
-const isDirectLocal = isBrowser && (window.location.port === '3000' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'));
+const envApiUrl = import.meta.env?.VITE_API_URL;
+const envWsUrl = import.meta.env?.VITE_WS_URL;
 
-export const API_BASE = (import.meta.env?.VITE_API_URL as string) || (
-  isDirectLocal
-    ? 'http://localhost:8000'
-    : (isBrowser ? window.location.origin : 'http://localhost:8000')
-);
+export const API_BASE = (envApiUrl && envApiUrl.trim() !== '')
+  ? envApiUrl.replace(/\/+$/, '')
+  : (isBrowser
+      ? (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+          ? 'http://localhost:8000'
+          : `http://${window.location.hostname}:8000`)
+      : 'http://localhost:8000');
 
-export const WS_URL = (import.meta.env?.VITE_WS_URL as string) || (
-  isDirectLocal
-    ? 'ws://localhost:8000/ws/live-feed'
-    : (isBrowser
-        ? `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws/live-feed`
-        : 'ws://localhost:8000/ws/live-feed')
-);
+export const WS_URL = (envWsUrl && envWsUrl.trim() !== '')
+  ? envWsUrl
+  : (isBrowser
+      ? (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+          ? 'ws://localhost:8000/ws/live-feed'
+          : `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.hostname}:8000/ws/live-feed`)
+      : 'ws://localhost:8000/ws/live-feed');
 
 export async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
   const token = localStorage.getItem('civicpulse_token');
