@@ -42,7 +42,8 @@ class Settings(BaseModel):
     HOST: str = os.getenv("HOST", "0.0.0.0")
     
     # Authentication & Security
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "civicpulse_dev_super_secret_session_token_key_2026")
+    SECRET_KEY: str = os.getenv("SECRET_KEY", os.getenv("JWT_SECRET", "99af40c3a6b15fa416f2ed9dd466a9dda406ade3f596ae0c173c44fde35e3d12"))
+    JWT_SECRET: str = os.getenv("JWT_SECRET", os.getenv("SECRET_KEY", "99af40c3a6b15fa416f2ed9dd466a9dda406ade3f596ae0c173c44fde35e3d12"))
     SESSION_EXPIRE_HOURS: int = int(os.getenv("SESSION_EXPIRE_HOURS", "24"))
     
     # Database
