@@ -9,6 +9,7 @@ import { LiveIncidentMap } from './components/CommandCenter/LiveIncidentMap';
 import { WorkloadSlaPanel } from './components/CommandCenter/WorkloadSlaPanel';
 import { HumanReviewQueue } from './components/CommandCenter/HumanReviewQueue';
 import { OfficerRepairModal } from './components/CommandCenter/OfficerRepairModal';
+import { PasskeyGate } from './components/CommandCenter/PasskeyGate';
 import {
   UploadCloud,
   Search,
@@ -21,12 +22,20 @@ import {
 const AppContent: React.FC = () => {
   const {
     role,
+    setRole,
     citizenTab,
     setCitizenTab,
     officerTab,
     setOfficerTab,
     kpi
   } = useCivicPulse();
+
+  const [authorityUnlocked, setAuthorityUnlocked] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('authorityUnlocked') === 'true';
+    }
+    return false;
+  });
 
   return (
     <div className="min-h-screen bg-[#F4F7FB] text-[#172B3A] flex flex-col font-sans">
@@ -84,58 +93,65 @@ const AppContent: React.FC = () => {
 
         {/* ================= VIEW 2: MUNICIPAL COMMAND CENTER (AUTHORITY DASHBOARD) ================= */}
         {role === 'OFFICER' && (
-          <div className="space-y-6 animate-in fade-in duration-200">
-            {/* Top 6 KPI Cards (Strictly 6 - NO Average Resolution Time) */}
-            <KpiGrid />
+          !authorityUnlocked ? (
+            <PasskeyGate
+              onUnlock={() => setAuthorityUnlocked(true)}
+              onCancel={() => setRole('CITIZEN')}
+            />
+          ) : (
+            <div className="space-y-6 animate-in fade-in duration-200">
+              {/* Top 6 KPI Cards (Strictly 6 - NO Average Resolution Time) */}
+              <KpiGrid />
 
-            {/* Officer Sub-Navigation Tabs */}
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#DCE5EE] pb-3">
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setOfficerTab('MAP')}
-                  className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm ${
-                    officerTab === 'MAP'
-                      ? 'bg-[#10243A] text-white shadow-md shadow-slate-300/40 border border-[#10243A]'
-                      : 'bg-white text-[#64748B] hover:text-[#172B3A] border border-[#DCE5EE]'
-                  }`}
-                >
-                  <MapPin className="w-4 h-4" />
-                  <span>Live Geospatial Map</span>
-                </button>
+              {/* Officer Sub-Navigation Tabs */}
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#DCE5EE] pb-3">
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setOfficerTab('MAP')}
+                    className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm ${
+                      officerTab === 'MAP'
+                        ? 'bg-[#10243A] text-white shadow-md shadow-slate-300/40 border border-[#10243A]'
+                        : 'bg-white text-[#64748B] hover:text-[#172B3A] border border-[#DCE5EE]'
+                    }`}
+                  >
+                    <MapPin className="w-4 h-4" />
+                    <span>Live Geospatial Map</span>
+                  </button>
 
-                <button
-                  onClick={() => setOfficerTab('SLA_BOARD')}
-                  className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm ${
-                    officerTab === 'SLA_BOARD'
-                      ? 'bg-[#10243A] text-white shadow-md shadow-slate-300/40 border border-[#10243A]'
-                      : 'bg-white text-[#64748B] hover:text-[#172B3A] border border-[#DCE5EE]'
-                  }`}
-                >
-                  <Clock className="w-4 h-4" />
-                  <span>Workload &amp; SLA Boards</span>
-                </button>
+                  <button
+                    onClick={() => setOfficerTab('SLA_BOARD')}
+                    className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm ${
+                      officerTab === 'SLA_BOARD'
+                        ? 'bg-[#10243A] text-white shadow-md shadow-slate-300/40 border border-[#10243A]'
+                        : 'bg-white text-[#64748B] hover:text-[#172B3A] border border-[#DCE5EE]'
+                    }`}
+                  >
+                    <Clock className="w-4 h-4" />
+                    <span>Workload &amp; SLA Boards</span>
+                  </button>
 
-                <button
-                  onClick={() => setOfficerTab('REVIEW_QUEUE')}
-                  className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm ${
-                    officerTab === 'REVIEW_QUEUE'
-                      ? 'bg-[#10243A] text-white shadow-md shadow-slate-300/40 border border-[#10243A]'
-                      : 'bg-white text-[#64748B] hover:text-[#172B3A] border border-[#DCE5EE]'
-                  }`}
-                >
-                  <ShieldAlert className="w-4 h-4" />
-                  <span>Human Review Queue</span>
-                  <span className="ml-1 px-1.5 py-0.2 bg-[#E9A23B] text-white font-bold text-[10px] rounded-full">
-                    1
-                  </span>
-                </button>
+                  <button
+                    onClick={() => setOfficerTab('REVIEW_QUEUE')}
+                    className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm ${
+                      officerTab === 'REVIEW_QUEUE'
+                        ? 'bg-[#10243A] text-white shadow-md shadow-slate-300/40 border border-[#10243A]'
+                        : 'bg-white text-[#64748B] hover:text-[#172B3A] border border-[#DCE5EE]'
+                    }`}
+                  >
+                    <ShieldAlert className="w-4 h-4" />
+                    <span>Human Review Queue</span>
+                    <span className="ml-1 px-1.5 py-0.2 bg-[#E9A23B] text-white font-bold text-[10px] rounded-full">
+                      1
+                    </span>
+                  </button>
+                </div>
               </div>
-            </div>
 
-            {officerTab === 'MAP' && <LiveIncidentMap />}
-            {officerTab === 'SLA_BOARD' && <WorkloadSlaPanel />}
-            {officerTab === 'REVIEW_QUEUE' && <HumanReviewQueue />}
-          </div>
+              {officerTab === 'MAP' && <LiveIncidentMap />}
+              {officerTab === 'SLA_BOARD' && <WorkloadSlaPanel />}
+              {officerTab === 'REVIEW_QUEUE' && <HumanReviewQueue />}
+            </div>
+          )
         )}
       </main>
 
