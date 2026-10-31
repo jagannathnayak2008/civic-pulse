@@ -57,19 +57,7 @@ interface CivicPulseContextType {
   resetDemo: () => Promise<void>;
 }
 
-// Dynamic API & WS resolution (works seamlessly on localhost, LAN, and public online tunnels)
-const isBrowser = typeof window !== 'undefined';
-const isDirectLocal = isBrowser && (window.location.port === '3000' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'));
-
-const API_BASE = isDirectLocal
-  ? 'http://localhost:8000'
-  : (isBrowser ? window.location.origin : 'http://localhost:8000');
-
-const WS_URL = isDirectLocal
-  ? 'ws://localhost:8000/ws/live-feed'
-  : (isBrowser
-      ? `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws/live-feed`
-      : 'ws://localhost:8000/ws/live-feed');
+import { API_BASE, WS_URL } from '../services/api';
 
 // Baseline Municipal Zones
 const DEFAULT_ZONES: MunicipalZone[] = [
