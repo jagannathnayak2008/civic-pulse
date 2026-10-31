@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #10243A;
+  --color-secondary: #172F49;
+  --color-accent: #13B8C5;
+  --color-accent-blue: #3B82F6;
+
+  --color-background: #F4F7FB;
+  --color-surface: #FFFFFF;
+
+  --color-text-primary: #172B3A;
+  --color-text-secondary: #64748B;
+
+  --color-border: #DCE5EE;
+
+  --color-success: #16A36A;
+  --color-warning: #E9A23B;
+  --color-danger: #DC4C4C;
+  --color-info: #3295D6;
+}
+
+@layer base {
+  body {
+    background-color: #F4F7FB;
+    color: #172B3A;
+    font-family: inherit;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Custom styling for Leaflet inside enterprise theme */
+.leaflet-container {
+  font-family: inherit;
+  background-color: #F4F7FB !important;
+  border-radius: 1rem;
+  z-index: 0 !important;
+  isolation: isolate;
+}
+
+/* Ensure Leaflet controls and tile panes never bleed over the sticky navbar */
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 10 !important;
+}
+
+.leaflet-pane {
+  z-index: 1 !important;
+}
+
+.leaflet-popup-pane {
+  z-index: 20 !important;
+}
+
+.custom-leaflet-marker {
+  background: transparent;
+  border: none;
+}
+
+.custom-leaflet-popup .leaflet-popup-content-wrapper {
+  background-color: #ffffff;
+  border: 1px solid #DCE5EE;
+  border-radius: 1rem;
+  box-shadow: 0 10px 25px -5px rgba(16, 36, 58, 0.12), 0 8px 10px -6px rgba(16, 36, 58, 0.08);
+  padding: 0;
+  overflow: hidden;
+}
+
+.custom-leaflet-popup .leaflet-popup-content {
+  margin: 0;
+  line-height: 1.4;
+  color: #172B3A;
+}
+
+.custom-leaflet-popup .leaflet-popup-tip {
+  background-color: #ffffff;
+}
+
+/* Ping animation */
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+/* White selected marker glow animation */
+@keyframes whiteMarkerPulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.95;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+.custom-white-selected-marker {
+  background: transparent;
+  border: none;
+}
