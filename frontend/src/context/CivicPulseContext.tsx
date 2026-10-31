@@ -1075,10 +1075,39 @@ export const CivicPulseProvider: React.FC<{ children: ReactNode }> = ({ children
     };
   }, []);
 
+  // Helper to store tokens across all standard key identifiers
+  const saveAuthToken = (token: string, remember: boolean = true) => {
+    if (remember) {
+      localStorage.setItem('civicpulse_auth_token', token);
+      localStorage.setItem('civicpulse_token', token);
+      sessionStorage.removeItem('civicpulse_auth_token');
+      sessionStorage.removeItem('civicpulse_token');
+    } else {
+      sessionStorage.setItem('civicpulse_auth_token', token);
+      sessionStorage.setItem('civicpulse_token', token);
+      localStorage.removeItem('civicpulse_auth_token');
+      localStorage.removeItem('civicpulse_token');
+    }
+  };
+
+  const clearAuthTokens = () => {
+    localStorage.removeItem('civicpulse_auth_token');
+    localStorage.removeItem('civicpulse_token');
+    sessionStorage.removeItem('civicpulse_auth_token');
+    sessionStorage.removeItem('civicpulse_token');
+  };
+
+  const getSavedToken = (): string | null => {
+    return localStorage.getItem('civicpulse_auth_token') ||
+           localStorage.getItem('civicpulse_token') ||
+           sessionStorage.getItem('civicpulse_auth_token') ||
+           sessionStorage.getItem('civicpulse_token');
+  };
+
   // Check and restore active user authentication session
   useEffect(() => {
     const verifySavedSession = async () => {
-      const token = localStorage.getItem('civicpulse_auth_token') || sessionStorage.getItem('civicpulse_auth_token');
+      const token = getSavedToken();
       if (!token) {
         setAuthLoading(false);
         return;
@@ -1097,13 +1126,11 @@ export const CivicPulseProvider: React.FC<{ children: ReactNode }> = ({ children
               setRole('OFFICER');
             }
           } else {
-            localStorage.removeItem('civicpulse_auth_token');
-            sessionStorage.removeItem('civicpulse_auth_token');
+            clearAuthTokens();
             setIsAuthenticated(false);
           }
         } else {
-          localStorage.removeItem('civicpulse_auth_token');
-          sessionStorage.removeItem('civicpulse_auth_token');
+          clearAuthTokens();
           setIsAuthenticated(false);
         }
       } catch (err) {
@@ -1126,17 +1153,13 @@ export const CivicPulseProvider: React.FC<{ children: ReactNode }> = ({ children
       });
       const data = await res.json();
       if (!res.ok) {
-        return { success: false, message: data.detail || 'Login failed.' };
+        const errMsg = typeof data.detail === 'string'
+          ? data.detail
+          : (Array.isArray(data.detail) ? data.detail.map((d: any) => d.msg || JSON.stringify(d)).join(', ') : 'Login failed.');
+        return { success: false, message: errMsg };
       }
 
-      if (credentials.remember_me) {
-        localStorage.setItem('civicpulse_auth_token', data.token);
-        sessionStorage.removeItem('civicpulse_auth_token');
-      } else {
-        sessionStorage.setItem('civicpulse_auth_token', data.token);
-        localStorage.removeItem('civicpulse_auth_token');
-      }
-
+      saveAuthToken(data.token, credentials.remember_me !== false);
       setCurrentUser(data.user);
       setIsAuthenticated(true);
       if (data.user.role === 'OFFICER') {
@@ -1145,7 +1168,7 @@ export const CivicPulseProvider: React.FC<{ children: ReactNode }> = ({ children
       setNotification(`Welcome back, ${data.user.full_name}!`);
       return { success: true };
     } catch (e) {
-      return { success: false, message: 'Could not connect to authentication server.' };
+      return { success: false, message: 'Could not connect to authentication server. Please ensure backend is running.' };
     }
   }, []);
 
@@ -1158,24 +1181,27 @@ export const CivicPulseProvider: React.FC<{ children: ReactNode }> = ({ children
       });
       const data = await res.json();
       if (!res.ok) {
-        return { success: false, message: data.detail || 'Registration failed.' };
+        const errMsg = typeof data.detail === 'string'
+          ? data.detail
+          : (Array.isArray(data.detail) ? data.detail.map((d: any) => d.msg || JSON.stringify(d)).join(', ') : 'Registration failed.');
+        return { success: false, message: errMsg };
       }
 
-      localStorage.setItem('civicpulse_auth_token', data.token);
+      saveAuthToken(data.token, true);
       setCurrentUser(data.user);
       setIsAuthenticated(true);
       if (data.user.role === 'OFFICER') {
         setRole('OFFICER');
       }
       setNotification(`Account registered! Welcome to CivicPulse, ${data.user.full_name}.`);
-      return { success: true };
+      return { success: true, message: data.message };
     } catch (e) {
-      return { success: false, message: 'Could not connect to authentication server.' };
+      return { success: false, message: 'Could not connect to authentication server. Please ensure backend is running.' };
     }
   }, []);
 
   const logout = useCallback(async () => {
-    const token = localStorage.getItem('civicpulse_auth_token') || sessionStorage.getItem('civicpulse_auth_token');
+    const token = getSavedToken();
     try {
       if (token) {
         await fetch(`${API_BASE}/api/auth/logout`, {
@@ -1186,12 +1212,12 @@ export const CivicPulseProvider: React.FC<{ children: ReactNode }> = ({ children
     } catch (e) {
       console.warn('Backend logout failed', e);
     }
-    localStorage.removeItem('civicpulse_auth_token');
-    sessionStorage.removeItem('civicpulse_auth_token');
+    clearAuthTokens();
     setCurrentUser(null);
     setIsAuthenticated(false);
     setNotification('You have logged out successfully.');
   }, []);
+
 
   // 1-Click Community Confirmation
   const confirmIncident = useCallback(async (trackingNumber: string) => {

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { API_BASE } from '../../services/api';
 import { useCivicPulse } from '../../context/CivicPulseContext';
 import {
   ShieldAlert,
@@ -54,14 +55,13 @@ export const AuthPortal: React.FC = () => {
   const [forgotSuccess, setForgotSuccess] = useState<string | null>(null);
 
   // Password complexity checks for registration
-  const hasMinLength = regPassword.length >= 8;
+  const hasMinLength = regPassword.length >= 6;
   const hasUpperCase = /[A-Z]/.test(regPassword);
   const hasLowerCase = /[a-z]/.test(regPassword);
   const hasNumber = /[0-9]/.test(regPassword);
   const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>\-_+=\[\]~\\/]/.test(regPassword);
   const passwordsMatch = regPassword.length > 0 && regPassword === regConfirmPassword;
-  const isPasswordValid =
-    hasMinLength && hasUpperCase && hasLowerCase && hasNumber && hasSpecialChar && passwordsMatch;
+  const isPasswordValid = hasMinLength && passwordsMatch;
 
   // Handle Login Submit
   const handleLoginSubmit = async (e: React.FormEvent) => {
@@ -105,8 +105,12 @@ export const AuthPortal: React.FC = () => {
       setErrorMessage('Mobile Number / Login Identifier is required.');
       return;
     }
-    if (!isPasswordValid) {
-      setErrorMessage('Please satisfy all password complexity requirements.');
+    if (regPassword.length < 6) {
+      setErrorMessage('Password must contain at least 6 characters.');
+      return;
+    }
+    if (regPassword !== regConfirmPassword) {
+      setErrorMessage('Passwords do not match. Please verify both fields.');
       return;
     }
 
@@ -133,7 +137,7 @@ export const AuthPortal: React.FC = () => {
     setSuccessMessage(null);
     if (type === 'CITIZEN') {
       setLoginIdentifier('9876543210');
-      setLoginPassword('Citizen@123');
+      setLoginPassword('Password@123');
     } else {
       setLoginIdentifier('9437033003');
       setLoginPassword('Officer@123');
@@ -161,7 +165,7 @@ export const AuthPortal: React.FC = () => {
 
     setForgotLoading(true);
     try {
-      const response = await fetch('/api/auth/reset-password', {
+      const response = await fetch(`${API_BASE}/api/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -225,11 +229,10 @@ export const AuthPortal: React.FC = () => {
               setErrorMessage(null);
               setSuccessMessage(null);
             }}
-            className={`py-2.5 rounded-xl transition-all flex items-center justify-center space-x-2 ${
-              mode === 'LOGIN'
-                ? 'bg-[#10243A] text-white shadow-md shadow-slate-300/40'
-                : 'text-[#64748B] hover:text-[#172B3A]'
-            }`}
+            className={`py-2.5 rounded-xl transition-all flex items-center justify-center space-x-2 ${mode === 'LOGIN'
+              ? 'bg-[#10243A] text-white shadow-md shadow-slate-300/40'
+              : 'text-[#64748B] hover:text-[#172B3A]'
+              }`}
           >
             <LogIn className="w-3.5 h-3.5" />
             <span>Sign In</span>
@@ -242,11 +245,10 @@ export const AuthPortal: React.FC = () => {
               setErrorMessage(null);
               setSuccessMessage(null);
             }}
-            className={`py-2.5 rounded-xl transition-all flex items-center justify-center space-x-2 ${
-              mode === 'REGISTER'
-                ? 'bg-[#10243A] text-white shadow-md shadow-slate-300/40'
-                : 'text-[#64748B] hover:text-[#172B3A]'
-            }`}
+            className={`py-2.5 rounded-xl transition-all flex items-center justify-center space-x-2 ${mode === 'REGISTER'
+              ? 'bg-[#10243A] text-white shadow-md shadow-slate-300/40'
+              : 'text-[#64748B] hover:text-[#172B3A]'
+              }`}
           >
             <UserPlus className="w-3.5 h-3.5" />
             <span>First-Time Register</span>
@@ -492,7 +494,7 @@ export const AuthPortal: React.FC = () => {
               <div className="grid grid-cols-2 gap-1 text-[10px]">
                 <span className={`flex items-center space-x-1.5 ${hasMinLength ? 'text-[#16A36A] font-semibold' : 'text-slate-400'}`}>
                   <CheckCircle2 className={`w-3 h-3 ${hasMinLength ? 'text-[#16A36A]' : 'text-slate-300'}`} />
-                  <span>8+ characters</span>
+                  <span>6+ characters</span>
                 </span>
                 <span className={`flex items-center space-x-1.5 ${hasUpperCase ? 'text-[#16A36A] font-semibold' : 'text-slate-400'}`}>
                   <CheckCircle2 className={`w-3 h-3 ${hasUpperCase ? 'text-[#16A36A]' : 'text-slate-300'}`} />

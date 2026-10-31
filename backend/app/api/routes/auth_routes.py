@@ -1,8 +1,9 @@
 """
 Authentication Routes: Register, Login, Session Check, Logout, Password Recovery
+Uses HS256 JWT tokens signed with JWT_SECRET.
 """
 
-from fastapi import APIRouter, HTTPException, Header
+from fastapi import APIRouter, HTTPException, Header, Query
 from typing import Optional
 
 from ...schemas.auth_schemas import (
@@ -14,7 +15,7 @@ from ...schemas.auth_schemas import (
 )
 from ...services.auth_service import user_manager
 from ...core.security import (
-    create_session_token,
+    create_jwt_token,
     validate_session_token,
     invalidate_session_token
 )
@@ -24,11 +25,10 @@ router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 @router.post("/register", response_model=AuthSuccessResponse)
 async def auth_register(payload: RegisterRequest):
     """
-    First-time User Registration:
-    Validates full name, mobile number format, password match, and password complexity.
-    Stores password hashed with bcrypt and issues a session token.
+    User Registration:
+    Validates name, phone number, password, and issues an HS256 JWT session token.
     """
-    if payload.password != payload.confirm_password:
+    if payload.confirm_password and payload.password != payload.confirm_password:
         raise HTTPException(status_code=400, detail="Passwords do not match. Please verify both fields.")
 
     try:
@@ -43,7 +43,15 @@ async def auth_register(payload: RegisterRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
 
-    token = create_session_token(new_user["id"], remember_me=True)
+    # Issue signed JWT token
+    token = create_jwt_token(
+        user_id=new_user["id"],
+        role=new_user["role"],
+        full_name=new_user["full_name"],
+        phone_number=new_user["phone_number"],
+        remember_me=True
+    )
+
     user_resp = UserProfileResponse(
         id=new_user["id"],
         full_name=new_user["full_name"],
@@ -52,6 +60,7 @@ async def auth_register(payload: RegisterRequest):
         created_at=new_user["created_at"],
         last_login=new_user["last_login"]
     )
+
     return AuthSuccessResponse(
         success=True,
         message="Account registered successfully! Welcome to CivicPulse.",
@@ -62,17 +71,30 @@ async def auth_register(payload: RegisterRequest):
 @router.post("/login", response_model=AuthSuccessResponse)
 async def auth_login(payload: LoginRequest):
     """
-    Returning User Login:
-    Authenticates by Registered Number or User ID and verifies bcrypt password hash.
+    User Login:
+    Accepts login_identifier, phone_number, username, or email.
+    Authenticates password and issues a signed JWT token.
     """
-    user = user_manager.authenticate(payload.login_identifier, payload.password)
+    identifier = payload.get_identifier()
+    if not identifier:
+        raise HTTPException(status_code=400, detail="Please provide a valid phone number or login identifier.")
+
+    user = user_manager.authenticate(identifier, payload.password)
     if not user:
         raise HTTPException(
             status_code=401,
             detail="Invalid credentials. Please verify your Registered Number and Password."
         )
 
-    token = create_session_token(user["id"], remember_me=payload.remember_me or False)
+    # Issue signed JWT token
+    token = create_jwt_token(
+        user_id=user["id"],
+        role=user["role"],
+        full_name=user["full_name"],
+        phone_number=user["phone_number"],
+        remember_me=bool(payload.remember_me)
+    )
+
     user_resp = UserProfileResponse(
         id=user["id"],
         full_name=user["full_name"],
@@ -81,6 +103,7 @@ async def auth_login(payload: LoginRequest):
         created_at=user["created_at"],
         last_login=user["last_login"]
     )
+
     return AuthSuccessResponse(
         success=True,
         message=f"Welcome back, {user['full_name']}!",
@@ -89,10 +112,13 @@ async def auth_login(payload: LoginRequest):
     )
 
 @router.get("/me")
-async def auth_me(authorization: Optional[str] = Header(None)):
+async def auth_me(
+    authorization: Optional[str] = Header(None),
+    token_param: Optional[str] = Query(None, alias="token")
+):
     """
     Session Verification:
-    Validates the bearer token or session cookie and returns active user details.
+    Validates the bearer token or query token and returns active user details.
     """
     token = None
     if authorization:
@@ -101,6 +127,8 @@ async def auth_me(authorization: Optional[str] = Header(None)):
             token = parts[1]
         else:
             token = authorization
+    elif token_param:
+        token = token_param
 
     if not token:
         raise HTTPException(status_code=401, detail="No authentication token provided.")
@@ -116,16 +144,14 @@ async def auth_me(authorization: Optional[str] = Header(None)):
             "full_name": user["full_name"],
             "phone_number": user["phone_number"],
             "role": user["role"],
-            "created_at": user["created_at"],
+            "created_at": user.get("created_at", ""),
             "last_login": user.get("last_login")
         }
     }
 
 @router.post("/logout")
 async def auth_logout(authorization: Optional[str] = Header(None)):
-    """
-    Terminates the user's active session token.
-    """
+    """Terminates session."""
     token = None
     if authorization:
         parts = authorization.split()
@@ -140,16 +166,18 @@ async def auth_logout(authorization: Optional[str] = Header(None)):
     return {"success": True, "message": "Session logged out successfully."}
 
 @router.post("/forgot-password")
-async def auth_forgot_password(payload: ForgotPasswordRequest):
-    """
-    Password Recovery / Reset flow:
-    Updates password if account exists and meets complexity criteria.
-    """
-    if payload.new_password != payload.confirm_password:
+@router.post("/reset-password")
+async def auth_reset_password(payload: ForgotPasswordRequest):
+    """Password Recovery / Reset flow."""
+    identifier = payload.get_identifier()
+    if not identifier:
+        raise HTTPException(status_code=400, detail="Registered phone number or identifier is required.")
+
+    if payload.confirm_password and payload.new_password != payload.confirm_password:
         raise HTTPException(status_code=400, detail="New passwords do not match.")
 
     try:
-        success = user_manager.reset_password(payload.login_identifier, payload.new_password)
+        success = user_manager.reset_password(identifier, payload.new_password)
         if not success:
             raise HTTPException(
                 status_code=404,
@@ -163,4 +191,3 @@ async def auth_forgot_password(payload: ForgotPasswordRequest):
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Reset failed: {str(e)}")
-

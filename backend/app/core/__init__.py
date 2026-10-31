@@ -4,6 +4,8 @@ from .security import (
     verify_password,
     normalize_phone,
     validate_password_complexity,
+    create_jwt_token,
+    decode_jwt_token,
     create_session_token,
     validate_session_token,
     invalidate_session_token,
@@ -16,9 +18,10 @@ __all__ = [
     "verify_password",
     "normalize_phone",
     "validate_password_complexity",
+    "create_jwt_token",
+    "decode_jwt_token",
     "create_session_token",
     "validate_session_token",
     "invalidate_session_token",
     "ACTIVE_SESSIONS"
 ]
-
