@@ -2,14 +2,11 @@ import React from 'react';
 import { useCivicPulse } from '../context/CivicPulseContext';
 import {
   ShieldAlert,
-  Radio,
   UserCheck,
   Building2,
   RotateCcw,
   CheckCircle2,
-  X,
-  LogOut,
-  User
+  X
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
@@ -20,9 +17,7 @@ export const Navbar: React.FC = () => {
     notification,
     clearNotification,
     resetDemo,
-    kpi,
-    currentUser,
-    setLogoutModalOpen
+    kpi
   } = useCivicPulse();
 
   return (
@@ -72,7 +67,7 @@ export const Navbar: React.FC = () => {
               }`}
             >
               <Building2 className="w-3.5 h-3.5" />
-              <span>🔐 Authority Dashboard</span>
+              <span>Authority Dashboard</span>
               {kpi.critical_incidents > 0 && (
                 <span className="ml-1 px-1.5 py-0.2 bg-[#DC4C4C] text-white rounded-full text-[10px] font-bold">
                   {kpi.critical_incidents}
@@ -110,33 +105,22 @@ export const Navbar: React.FC = () => {
               <span className="hidden sm:inline">Reset State</span>
             </button>
 
-            {/* Authenticated User Badge & Logout Option */}
-            {currentUser && (
-              <div className="flex items-center space-x-2 pl-2 border-l border-slate-700/60">
-                <div className="flex items-center space-x-2 px-2.5 py-1 bg-[#172F49] border border-slate-700/60 rounded-xl">
-                  <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-[#13B8C5] to-[#3B82F6] flex items-center justify-center text-white font-bold text-[11px] shadow-sm">
-                    {currentUser.full_name ? currentUser.full_name.charAt(0).toUpperCase() : 'U'}
-                  </div>
-                  <div className="hidden lg:block text-left">
-                    <span className="text-xs font-bold text-white block leading-tight max-w-[120px] truncate">
-                      {currentUser.full_name}
-                    </span>
-                    <span className="text-[10px] text-[#13B8C5] font-mono block leading-none">
-                      {currentUser.phone_number}
-                    </span>
-                  </div>
+            {/* Direct Dashboard Access Indicator */}
+            <div className="flex items-center space-x-2 pl-2 border-l border-slate-700/60">
+              <div className="flex items-center space-x-2 px-2.5 py-1 bg-[#172F49] border border-slate-700/60 rounded-xl">
+                <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-[#13B8C5] to-[#3B82F6] flex items-center justify-center text-white font-bold text-[11px] shadow-sm">
+                  ✓
                 </div>
-
-                <button
-                  onClick={() => setLogoutModalOpen(true)}
-                  className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold text-red-200 hover:text-white bg-red-900/40 hover:bg-red-800/60 border border-red-700/60 rounded-xl transition shadow-sm"
-                  title="Sign Out of CivicPulse"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Sign Out</span>
-                </button>
+                <div className="hidden lg:block text-left">
+                  <span className="text-xs font-bold text-white block leading-tight">
+                    Direct Dashboard
+                  </span>
+                  <span className="text-[10px] text-[#13B8C5] font-mono block leading-none">
+                    Instant Access
+                  </span>
+                </div>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>

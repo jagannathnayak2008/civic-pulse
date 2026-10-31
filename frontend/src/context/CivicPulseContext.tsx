@@ -956,10 +956,16 @@ const DEFAULT_KPI: KPIGridSummary = {
 const CivicPulseContext = createContext<CivicPulseContextType | undefined>(undefined);
 
 export const CivicPulseProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Authentication State
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [authLoading, setAuthLoading] = useState<boolean>(true);
+  // Direct Dashboard Access (No Starting Page Auth Barrier)
+  const [currentUser, setCurrentUser] = useState<User | null>({
+    id: 'USR-CITIZEN-01',
+    full_name: 'Citizen (Direct Access)',
+    phone_number: '9876543210',
+    role: 'CITIZEN',
+    created_at: '2026-10-31 00:00:00 UTC'
+  });
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
+  const [authLoading, setAuthLoading] = useState<boolean>(false);
   const [logoutModalOpen, setLogoutModalOpen] = useState<boolean>(false);
 
   const [incidents, setIncidents] = useState<MasterIncident[]>(DEFAULT_INCIDENTS);
@@ -1104,43 +1110,10 @@ export const CivicPulseProvider: React.FC<{ children: ReactNode }> = ({ children
            sessionStorage.getItem('civicpulse_token');
   };
 
-  // Check and restore active user authentication session
+  // Direct Dashboard Access (Auth verification bypass)
   useEffect(() => {
-    const verifySavedSession = async () => {
-      const token = getSavedToken();
-      if (!token) {
-        setAuthLoading(false);
-        return;
-      }
-
-      try {
-        const res = await fetch(`${API_BASE}/api/auth/me`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.authenticated && data.user) {
-            setCurrentUser(data.user);
-            setIsAuthenticated(true);
-            if (data.user.role === 'OFFICER') {
-              setRole('OFFICER');
-            }
-          } else {
-            clearAuthTokens();
-            setIsAuthenticated(false);
-          }
-        } else {
-          clearAuthTokens();
-          setIsAuthenticated(false);
-        }
-      } catch (err) {
-        console.warn('Auth verification network error, preserving local session');
-      } finally {
-        setAuthLoading(false);
-      }
-    };
-
-    verifySavedSession();
+    setAuthLoading(false);
+    setIsAuthenticated(true);
   }, []);
 
   // Authentication Actions
