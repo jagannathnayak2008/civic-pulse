@@ -23,3 +23,4 @@ if __name__ == "__main__":
     print("=" * 60 + "\n", flush=True)
 
     uvicorn.run("ai_engine.services.ai_service:app", host="0.0.0.0", port=8001, reload=True, log_level="info")
+
