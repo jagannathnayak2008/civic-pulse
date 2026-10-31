@@ -10,3 +10,4 @@ FRONTEND_PID=$!
 
 echo "Backend PID: $BACKEND_PID | Frontend PID: $FRONTEND_PID"
 wait
+

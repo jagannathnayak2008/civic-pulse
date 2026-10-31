@@ -47,3 +47,4 @@ class VisionYOLOEngine:
         )
 
 vision_engine = VisionYOLOEngine()
+

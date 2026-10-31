@@ -28,3 +28,4 @@ AI_CONFIDENCE_THRESHOLDS: Dict[str, float] = {
     "repair_verification_min_score": 85.0,
     "gps_tolerance_meters": 30.0
 }
+

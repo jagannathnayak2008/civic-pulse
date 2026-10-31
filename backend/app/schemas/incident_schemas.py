@@ -27,3 +27,4 @@ class VerifyRepairPayload(BaseModel):
 class CitizenFeedbackPayload(BaseModel):
     action: str = Field(..., description="'CONFIRM' or 'DISPUTE'")
     dispute_reason: Optional[str] = None
+

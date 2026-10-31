@@ -11,3 +11,4 @@ __all__ = [
     "municipal_router",
     "websocket_router"
 ]
+

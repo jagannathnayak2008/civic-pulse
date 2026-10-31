@@ -11,3 +11,4 @@ echo Dual servers launched successfully!
 echo Backend:  http://localhost:8000
 echo Frontend: http://localhost:3000
 pause
+

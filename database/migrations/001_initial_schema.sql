@@ -2,3 +2,4 @@
 -- PostGIS spatial tables, users, incidents, citizen reports, and audit logs
 
 \i schemas/schema.sql;
+

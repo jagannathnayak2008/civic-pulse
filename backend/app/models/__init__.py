@@ -33,3 +33,4 @@ __all__ = [
     "MunicipalZone",
     "KPIGridSummary"
 ]
+

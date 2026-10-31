@@ -163,3 +163,4 @@ async def auth_forgot_password(payload: ForgotPasswordRequest):
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Reset failed: {str(e)}")
+

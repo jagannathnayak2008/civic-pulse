@@ -20,3 +20,4 @@ export function formatTimeAgo(utcTimeString: string): string {
     return utcTimeString;
   }
 }
+

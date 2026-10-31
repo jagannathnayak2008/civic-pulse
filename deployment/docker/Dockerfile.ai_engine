@@ -19,3 +19,4 @@ ENV PORT=8001
 EXPOSE 8001
 
 CMD ["uvicorn", "ai_engine.services.ai_service:app", "--host", "0.0.0.0", "--port", "8001"]
+

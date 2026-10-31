@@ -113,3 +113,4 @@ sequenceDiagram
 ### Module 7: Explainable AI (XAI) & Cryptographic Audit Trails
 - Transparent mathematical scoring: `Base Severity + Proximity Penalty + Traffic Level + Worsening Trend`.
 - Every ticket transition appends a cryptographically chained SHA-256 audit entry.
+

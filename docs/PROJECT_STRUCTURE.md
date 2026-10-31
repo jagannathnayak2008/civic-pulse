@@ -99,3 +99,4 @@ Civic Pulse/
 ├── README.md                               # Project master README
 └── .env.example                            # Root environment template
 ```
+

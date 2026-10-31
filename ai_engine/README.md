@@ -46,3 +46,4 @@ API endpoints available:
 - `POST /api/ai/execute-workflow`
 - `POST /api/ai/verify-repair`
 - `GET /health`
+

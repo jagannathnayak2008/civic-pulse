@@ -84,3 +84,4 @@ All services will initialize automatically:
 - Backend: `http://localhost:8000`
 - AI Engine: `http://localhost:8001`
 - PostGIS DB: `localhost:5432`
+

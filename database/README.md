@@ -44,3 +44,4 @@ Execute schema migration:
 ```bash
 psql -h localhost -U postgres -d postgres -f database/schemas/schema.sql
 ```
+

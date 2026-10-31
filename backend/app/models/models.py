@@ -180,3 +180,4 @@ class KPIGridSummary(BaseModel):
     pending_incidents: int = 120
     critical_incidents: int = 18
     resolved_incidents: int = 720
+

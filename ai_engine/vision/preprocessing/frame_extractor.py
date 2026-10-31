@@ -46,3 +46,4 @@ class VideoFrameExtractor:
         return frames
 
 frame_extractor = VideoFrameExtractor()
+

@@ -19,3 +19,4 @@ Follow these steps for a zero-friction deployment to Vercel:
    - `VITE_WS_URL` = `wss://<your-render-backend-url>.onrender.com/ws/live-feed`
 
 4. Click **Deploy**. Vercel will build and deploy the production bundle with automatic SSL and global CDN caching.
+

@@ -145,3 +145,4 @@ class YOLODetector:
             }
 
 detector = YOLODetector()
+
