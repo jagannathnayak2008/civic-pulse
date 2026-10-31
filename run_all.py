@@ -2,7 +2,6 @@ import sys
 import os
 import subprocess
 import time
-import webbrowser
 
 if hasattr(sys.stdout, 'reconfigure'):
     try:
@@ -11,7 +10,7 @@ if hasattr(sys.stdout, 'reconfigure'):
         pass
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-FRONTEND_DIR = os.path.join(ROOT_DIR, "civicpulse", "frontend")
+FRONTEND_DIR = os.path.join(ROOT_DIR, "frontend") if os.path.exists(os.path.join(ROOT_DIR, "frontend")) else os.path.join(ROOT_DIR, "civicpulse", "frontend")
 
 def main():
     print("\n" + "=" * 65)
@@ -45,4 +44,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

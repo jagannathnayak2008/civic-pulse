@@ -8,13 +8,9 @@ if hasattr(sys.stdout, 'reconfigure'):
     except Exception:
         pass
 
-# Add root and civicpulse paths to sys.path
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-CIVICPULSE_DIR = os.path.join(ROOT_DIR, "civicpulse")
-
-for path in [ROOT_DIR, CIVICPULSE_DIR]:
-    if path not in sys.path:
-        sys.path.insert(0, path)
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
 
 import uvicorn
 
@@ -27,8 +23,11 @@ if __name__ == "__main__":
     print("=" * 60 + "\n", flush=True)
 
     try:
-        from civicpulse.backend.main import app
+        from backend.app.main import app
     except ImportError:
-        from backend.main import app
+        try:
+            from civicpulse.backend.main import app
+        except ImportError:
+            from backend.main import app
 
     uvicorn.run(app, host="127.0.0.1", port=8000, log_level="info")

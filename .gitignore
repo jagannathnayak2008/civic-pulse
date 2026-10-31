@@ -1,10 +1,12 @@
 # Dependencies
 node_modules/
 */node_modules/
+frontend/node_modules/
 civicpulse/frontend/node_modules/
 
 # Production build outputs
 dist/
+frontend/dist/
 civicpulse/frontend/dist/
 *.tsbuildinfo
 
@@ -38,7 +40,7 @@ wheels/
 
 # Temporary files
 *.tmp
-civicpulse/backend/*.tmp
+*.tmp.*
 *.log
 npm-debug.log*
 yarn-debug.log*

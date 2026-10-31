@@ -3,9 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "npm --prefix civicpulse/frontend run dev",
-    "start": "npm --prefix civicpulse/frontend run dev",
-    "build": "npm --prefix civicpulse/frontend run build"
+    "dev": "npm --prefix frontend run dev",
+    "start": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build"
   }
 }
-

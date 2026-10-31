@@ -1,0 +1,56 @@
+[
+  {
+    "id": "USR-101",
+    "full_name": "Rajesh Sharma",
+    "phone_number": "9876543210",
+    "hashed_password": "$2b$12$gJAVNP3dBwUfDN6x2inZUee.jCekEGuT2HnmouAl6CNCbGD0wOJiy",
+    "role": "CITIZEN",
+    "created_at": "2026-10-31 08:11:43 UTC",
+    "last_login": "2026-10-31 08:13:21 UTC"
+  },
+  {
+    "id": "USR-OFFICER-01",
+    "full_name": "Er. Alok Das (Zonal Engineer)",
+    "phone_number": "9437033003",
+    "hashed_password": "$2b$12$MoUQFNC2TFD7s9PzL3W3C.GdB1LjiiblYIdv4vbZmChgJx4ucQao.",
+    "role": "OFFICER",
+    "created_at": "2026-10-31 08:11:44 UTC",
+    "last_login": null
+  },
+  {
+    "id": "USR-41448",
+    "full_name": "Ananya Das",
+    "phone_number": "9123456780",
+    "hashed_password": "$2b$12$CeeuPB89drTN3vTF5y7wz.6zQGc/irPb6qqFjTmWLIlw8Zr9L/KEu",
+    "role": "CITIZEN",
+    "created_at": "2026-10-31 08:13:26 UTC",
+    "last_login": "2026-10-31 08:13:26 UTC"
+  },
+  {
+    "id": "USR-86975",
+    "full_name": "Bikash Mahapatra",
+    "phone_number": "9988776655",
+    "hashed_password": "$2b$12$EGqmBlHU6NxfHWMSuS7EUODwGEh1ZwLXnLm0qgOQI8zB2Z8TlhHue",
+    "role": "CITIZEN",
+    "created_at": "2026-10-31 08:18:41 UTC",
+    "last_login": "2026-10-31 08:18:41 UTC"
+  },
+  {
+    "id": "USR-15063",
+    "full_name": "Bikash Mahapatra 2",
+    "phone_number": "9988776654",
+    "hashed_password": "$2b$12$h.1/uhFaoVLTof4TGq1RP.YTEF/RVUSfMJMmRuVakl0f3yzgnTAK2",
+    "role": "CITIZEN",
+    "created_at": "2026-10-31 08:19:14 UTC",
+    "last_login": "2026-10-31 08:19:31 UTC"
+  },
+  {
+    "id": "USR-58735",
+    "full_name": "JAGANNATH NAYAK",
+    "phone_number": "7873594002",
+    "hashed_password": "$2b$12$GmjuApiemSsYBnIPBEJgE.XRRXbm0DbN6mq4iD.Mg5CU3TNcgVlW2",
+    "role": "CITIZEN",
+    "created_at": "2026-10-31 08:24:34 UTC",
+    "last_login": "2026-10-31 10:06:04 UTC"
+  }
+]

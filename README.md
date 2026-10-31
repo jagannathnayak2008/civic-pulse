@@ -6,29 +6,19 @@ CivicPulse is an enterprise-grade civic incident verification, deduplication, ro
 
 ---
 
-## 🌟 Key Features
+## 🌟 Architecture & Modular Layout
 
-1. **Autonomous Civic Problem Classifier**:
-   - Multi-problem classification: Road Potholes, Garbage Overflow, Public Toilets, Waterlogging, Drainage & Sewage, Streetlights, Open Manhole, and Others.
-   - Zero sample picture required for "Others" category.
-   - Interactive camera capture & media upload evidence verification.
+CivicPulse is organized into independent, deployment-ready modules:
 
-2. **Multilingual AI Voice Assistant**:
-   - Automated speech-to-text with zero-shot English translation supporting **Odia, Hindi, Bengali, Telugu, and English**.
-   - Phonetic dialect normalization with real-time audio wave visualization.
-
-3. **Spatial Deduplication & PostGIS Clustering**:
-   - Automated 35m spatial radius grouping with pHash perceptual visual hashing.
-   - Automatically detects duplicate incident reports and unifies them into canonical master tickets.
-
-4. **Authority Dashboard & Municipal Geospatial Console**:
-   - Interactive OpenStreetMap geospatial console with incident cluster pins, boundary polygons, and SLA tracking.
-   - Department workload management, Human Review Queue, and closed-loop repair approval.
-   - White inspect highlight marker with instant popup centering.
-
-5. **Secure Authentication & Role-Based Access Control**:
-   - Dedicated citizen and authority officer login/registration flows.
-   - Secure bcrypt password hashing, session tokens, and strict role permissions.
+```text
+CIVICPULSE/
+├── frontend/           # Independent React 18 + Vite SPA (Vercel-ready with vercel.json)
+├── backend/            # Independent FastAPI REST & WebSocket Backend (Render-ready with render.yaml)
+├── ai_engine/          # Decoupled AI Engine (YOLOv8, Whisper, pHash, PostGIS, XAI, LangGraph)
+├── database/           # PostgreSQL + PostGIS Schemas, Migrations & Seed Data (Neon-ready)
+├── deployment/         # Docker Compose, Multi-Cloud Blueprints (Vercel, Render) & Scripts
+└── docs/               # System Architecture, API Specification & Project Structure
+```
 
 ---
 
@@ -53,18 +43,13 @@ This automatically launches both the FastAPI backend server and the Vite React f
 
 #### Step 1: Start the Backend (FastAPI)
 ```bash
-# From the project root
 python run_backend.py
-```
-Or directly:
-```bash
-python -m uvicorn civicpulse.backend.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 *Backend API Docs will be live at `http://localhost:8000/docs`.*
 
 #### Step 2: Start the Frontend (React + Vite)
 ```bash
-cd civicpulse/frontend
+cd frontend
 npm install
 npm run dev
 ```
@@ -72,30 +57,23 @@ npm run dev
 
 ---
 
-## 📁 Project Architecture
+## ☁️ Cloud Deployment
 
-```text
-Civic Pulse/
-├── civicpulse/
-│   ├── backend/
-│   │   ├── auth.py              # User authentication, bcrypt hashing & JWT/tokens
-│   │   ├── main.py              # FastAPI endpoints & WebSocket broadcast hub
-│   │   ├── models.py            # Pydantic schemas & data models
-│   │   ├── seed_data.py         # Initial municipal incident records & demo datasets
-│   │   ├── users_db.json        # Persistent user records with hashed passwords
-│   │   └── orchestrator/        # Whisper, YOLOv8 vision, PostGIS & pHash logic
-│   └── frontend/
-│       ├── src/
-│       │   ├── components/      # CitizenPortal, CommandCenter, Auth, Navbar
-│       │   ├── types/           # TypeScript definitions
-│       │   └── index.css        # Enterprise design system & theme variables
-│       ├── package.json
-│       └── vite.config.ts
-├── run_all.bat                  # One-click dual server launcher
-├── run_backend.py               # Backend runner
-├── package.json                 # Root script definitions
-└── README.md
-```
+| Service | Recommended Host | Configuration |
+| :--- | :--- | :--- |
+| **Frontend** | [Vercel](https://vercel.com) | Point root to `frontend`, uses `vercel.json` |
+| **Backend** | [Render](https://render.com) | Uses `render.yaml` or `Procfile` |
+| **Database** | [Neon PostgreSQL](https://neon.tech) | Uses `database/schemas/schema.sql` (PostGIS) |
+| **Self-Hosted** | Docker Compose | Run `cd deployment/docker && docker-compose up -d` |
+
+See [deployment/DEPLOYMENT.md](file:///c:/Users/nictn/OneDrive/Pictures/Documents/Civic%20Pulse/deployment/DEPLOYMENT.md) for full instructions.
+
+---
+
+## 📖 Complete Documentation
+- **[System Architecture](file:///c:/Users/nictn/OneDrive/Pictures/Documents/Civic%20Pulse/docs/ARCHITECTURE.md)**: Data pipelines, Whisper phonetic normalization, YOLOv8 frame sampling, and LangGraph workflow.
+- **[REST & WebSocket API Specification](file:///c:/Users/nictn/OneDrive/Pictures/Documents/Civic%20Pulse/docs/API_DOCUMENTATION.md)**: Complete endpoint documentation with payload examples.
+- **[Project Directory Guide](file:///c:/Users/nictn/OneDrive/Pictures/Documents/Civic%20Pulse/docs/PROJECT_STRUCTURE.md)**: Detailed component and module mapping.
 
 ---
 

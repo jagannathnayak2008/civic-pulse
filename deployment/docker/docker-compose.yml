@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  database:
+    image: postgis/postgis:15-3.3
+    container_name: civicpulse-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: civicpulse_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ../../database/schemas/schema.sql:/docker-entrypoint-initdb.d/init.sql
+
+  ai_engine:
+    build:
+      context: ../../
+      dockerfile: deployment/docker/Dockerfile.ai_engine
+    container_name: civicpulse-ai
+    restart: always
+    ports:
+      - "8001:8001"
+
+  backend:
+    build:
+      context: ../../
+      dockerfile: deployment/docker/Dockerfile.backend
+    container_name: civicpulse-backend
+    restart: always
+    depends_on:
+      - database
+      - ai_engine
+    environment:
+      DATABASE_URL: postgresql://postgres:postgrespassword@database:5432/civicpulse_db
+      AI_ENGINE_URL: http://ai_engine:8001
+      FRONTEND_URL: http://localhost:3000
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ../../
+      dockerfile: deployment/docker/Dockerfile.frontend
+    container_name: civicpulse-frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+
+volumes:
+  pgdata:
