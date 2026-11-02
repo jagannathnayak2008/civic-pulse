@@ -39,7 +39,8 @@ class LangGraphIncidentOrchestrator:
         media_url: str = "",
         reporter_alias: str = "Citizen A",
         active_incidents: Optional[List[Dict[str, Any]]] = None,
-        is_recycled_test: bool = False
+        is_recycled_test: bool = False,
+        category: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Executes the end-to-end multi-agent LangGraph workflow.
@@ -54,7 +55,7 @@ class LangGraphIncidentOrchestrator:
             audio_preset_key=audio_preset or "odia_pothole",
             custom_text=raw_text
         )
-        category = audio_result["inferred_category"]
+        category = category or audio_result["inferred_category"]
 
         current_hash = self._generate_crypto_hash(current_hash, "MULTIMODAL_INGESTION", f"{category}:{audio_result['detected_language']}")
         audit_trail.append({
@@ -231,10 +232,12 @@ class LangGraphIncidentOrchestrator:
         # Master Tracking Number
         tracking_number = f"CP{len(active_incidents) + 102}"
 
+        incident_title = (raw_text.strip()[:75] + "...") if (raw_text and len(raw_text.strip()) > 75) else (raw_text.strip() if (raw_text and len(raw_text.strip()) > 5) else f"{category.replace('_', ' ').title()} near {sensitive_name or 'Metro Corridor'}")
+
         master_incident = {
             "id": str(uuid.uuid4()),
             "tracking_number": tracking_number,
-            "title": f"{category.replace('_', ' ').title()} near {sensitive_name or 'Metro Corridor'}",
+            "title": incident_title,
             "category": category,
             "priority": severity_result["priority"],
             "risk_score": severity_result["total_risk_score"],

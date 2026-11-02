@@ -1292,13 +1292,19 @@ export const CivicPulseProvider: React.FC<{ children: ReactNode }> = ({ children
       });
       if (res.ok) {
         const data = await res.json();
-        // Refresh incidents
-        const fetchRes = await fetch(`${API_BASE}/api/incidents`);
-        if (fetchRes.ok) {
-          const incList = await fetchRes.json();
-          setIncidents(incList);
-          selectIncidentByTracking(data.tracking_number);
+        if (data.incident) {
+          setIncidents((prev) => [data.incident, ...prev.filter((i) => i.tracking_number !== data.incident.tracking_number)]);
+          setSelectedIncident(data.incident);
         }
+        // Refresh incidents from backend if possible
+        try {
+          const fetchRes = await fetch(`${API_BASE}/api/incidents`);
+          if (fetchRes.ok) {
+            const incList = await fetchRes.json();
+            setIncidents(incList);
+            selectIncidentByTracking(data.tracking_number);
+          }
+        } catch (_) {}
         return {
           status: data.status,
           trackingNumber: data.tracking_number,
@@ -1310,38 +1316,61 @@ export const CivicPulseProvider: React.FC<{ children: ReactNode }> = ({ children
     }
 
     // Client fallback simulation
-    const isDup = formData.latitude === 20.2961 || formData.latitude === 20.2962;
-    if (isDup) {
+    const lat = Number(formData.latitude) || 20.2961;
+    const lon = Number(formData.longitude) || 85.8245;
+
+    // Check if within 45m of an active incident of same category (or demo coordinate 20.2961)
+    const existingMatch = incidents.find((inc) => {
+      if (inc.status === 'RESOLVED') return false;
+      const dLat = (inc.latitude - lat) * 111000;
+      const dLon = (inc.longitude - lon) * 111000 * Math.cos(lat * (Math.PI / 180));
+      const dist = Math.sqrt(dLat * dLat + dLon * dLon);
+      return (dist <= 45 && inc.category === formData.category) || (lat === 20.2961 && inc.tracking_number === 'CP102');
+    });
+
+    if (existingMatch) {
+      const newReport: CitizenReport = {
+        id: `rep-${Date.now()}`,
+        reporter_alias: formData.reporter_alias || (currentUser ? `${currentUser.full_name} (${currentUser.phone_number})` : 'Citizen Reporter'),
+        phone_masked: currentUser ? currentUser.phone_number.replace(/(\d{3})\d{4}(\d{3})/, '$1****$2') : '+91 97*** **842',
+        submitted_at: 'Just now',
+        latitude: lat,
+        longitude: lon,
+        media_url: formData.media_url || existingMatch.reports[0]?.media_url || '/images/road_pothole_angle2.jpg',
+        media_type: formData.media_type || 'PHOTO',
+        extracted_frames: [],
+        original_audio_script: formData.audio_script || formData.raw_text || 'Civic hazard reported by citizen.',
+        detected_language: formData.detected_language || 'en',
+        translated_english_text: formData.translated_english || formData.raw_text || 'Civic hazard reported by citizen.',
+        extracted_urgency_keywords: ['civic hazard', 'duplicate hotspot'],
+        phash: '3f8a9c1e7b2d5a42',
+        evidence_confidence: 96.0,
+        evidence_tier: 'HIGH' as const,
+        location_consistency: 'HIGH' as const,
+        image_quality: 'GOOD' as const,
+        flagged_for_human_review: false,
+        review_reason: null
+      };
+
       setIncidents((prev) =>
         prev.map((inc) => {
-          if (inc.tracking_number === 'CP102') {
-            const updated = {
+          if (inc.tracking_number === existingMatch.tracking_number) {
+            const updated: MasterIncident = {
               ...inc,
               report_count: inc.report_count + 1,
               duplicate_match_confidence: 96.0,
-              reports: [
-                ...inc.reports,
+              community_upvotes: inc.community_upvotes + 1,
+              reports: [...inc.reports, newReport],
+              audit_logs: [
+                ...inc.audit_logs,
                 {
-                  id: `rep-${Date.now()}`,
-                  reporter_alias: formData.reporter_alias || 'Citizen B (Debashis R.)',
-                  phone_masked: '+91 97*** **842',
-                  submitted_at: 'Just now',
-                  latitude: formData.latitude,
-                  longitude: formData.longitude,
-                  media_url: formData.media_url || '/images/road_pothole_angle2.jpg',
-                  media_type: formData.media_type || 'PHOTO',
-                  extracted_frames: [],
-                  original_audio_script: formData.audio_script || 'Same road pothole from opposite lane angle.',
-                  detected_language: 'en',
-                  translated_english_text: 'Same road pothole from opposite lane angle.',
-                  extracted_urgency_keywords: ['opposite lane', 'huge crater'],
-                  phash: '3f8a9c1e7b2d5a42',
-                  evidence_confidence: 95.0,
-                  evidence_tier: 'HIGH' as const,
-                  location_consistency: 'HIGH' as const,
-                  image_quality: 'GOOD' as const,
-                  flagged_for_human_review: false,
-                  review_reason: null
+                  id: `log-${Date.now()}`,
+                  timestamp: new Date().toISOString(),
+                  actor: 'AI Spatial Deduplication Node',
+                  actor_role: 'SYSTEM',
+                  action: 'DUPLICATE_MERGED',
+                  details: `Citizen report merged into ticket #${existingMatch.tracking_number} (geospatial cluster match). Priority boosted.`,
+                  cryptographic_hash: `SHA256-${Math.random().toString(16).substring(2, 10)}`
                 }
               ]
             };
@@ -1356,11 +1385,135 @@ export const CivicPulseProvider: React.FC<{ children: ReactNode }> = ({ children
         total_reports: prev.total_reports + 1,
         duplicate_reports_merged: prev.duplicate_reports_merged + 1
       }));
-      return { status: 'MERGED', trackingNumber: 'CP102', isDuplicate: true };
+      return { status: 'MERGED', trackingNumber: existingMatch.tracking_number, isDuplicate: true };
     }
 
-    return { status: 'CREATED', trackingNumber: 'CP106', isDuplicate: false };
-  }, [selectIncidentByTracking]);
+    // New unique incident creation
+    const nextNum = Math.max(105, ...incidents.map((i) => parseInt(i.tracking_number.replace(/\D/g, '')) || 100)) + 1;
+    const trackingNumber = `CP${nextNum}`;
+    const cat = formData.category || 'POTHOLE_ROAD_DAMAGE';
+    const rawText = (formData.raw_text || formData.translated_english || '').trim();
+
+    const catMeta: Record<string, { dept: string; priority: 'P1_CRITICAL' | 'P2_HIGH' | 'P3_MEDIUM'; risk: number; sla: number; defaultTitle: string }> = {
+      POTHOLE_ROAD_DAMAGE: { dept: 'Road Maintenance Department', priority: 'P1_CRITICAL', risk: 92, sla: 4, defaultTitle: 'Severe Road Crater & Pothole Hazard' },
+      OPEN_MANHOLE_HAZARDS: { dept: 'Stormwater Drainage & Sewerage Division', priority: 'P1_CRITICAL', risk: 95, sla: 4, defaultTitle: 'Open Uncovered Sewer Manhole' },
+      WATERLOGGING: { dept: 'Stormwater Drainage & Sewerage Division', priority: 'P1_CRITICAL', risk: 88, sla: 6, defaultTitle: 'Severe Roadway Waterlogging & Standing Water' },
+      GARBAGE_OVERFLOW: { dept: 'Sanitation & Solid Waste Management', priority: 'P2_HIGH', risk: 78, sla: 8, defaultTitle: 'Overflowing Uncollected Waste & Garbage' },
+      BROKEN_STREETLIGHT: { dept: 'Electrical & Public Lighting Division', priority: 'P2_HIGH', risk: 74, sla: 12, defaultTitle: 'Broken Luminaire & Streetlight Outage' },
+      DRAINAGE_WATER_LEAKAGE: { dept: 'Heavy Infrastructure & Industrial Drainage', priority: 'P2_HIGH', risk: 82, sla: 8, defaultTitle: 'Choked Storm Drain & Sewage Leakage' },
+      PUBLIC_TOILET_ISSUES: { dept: 'Urban Amenities & Civil Infrastructure', priority: 'P2_HIGH', risk: 70, sla: 12, defaultTitle: 'Public Toilet Facility Sanitary Defect' },
+      OTHERS: { dept: 'General Municipal Grievance & Civil Cell', priority: 'P3_MEDIUM', risk: 65, sla: 24, defaultTitle: 'Citizen Municipal Grievance' }
+    };
+
+    const meta = catMeta[cat] || catMeta.OTHERS;
+    const title = rawText.length > 5
+      ? (rawText.length > 75 ? `${rawText.slice(0, 72)}...` : rawText)
+      : `${meta.defaultTitle} at (${lat.toFixed(4)}, ${lon.toFixed(4)})`;
+
+    // Locate closest zone
+    const zone = DEFAULT_ZONES.find((z) => {
+      const poly = z.boundary_polygon;
+      const minLat = Math.min(...poly.map((p) => p[0]));
+      const maxLat = Math.max(...poly.map((p) => p[0]));
+      const minLon = Math.min(...poly.map((p) => p[1]));
+      const maxLon = Math.max(...poly.map((p) => p[1]));
+      return lat >= minLat && lat <= maxLat && lon >= minLon && lon <= maxLon;
+    }) || DEFAULT_ZONES[2];
+
+    const nowIso = new Date().toISOString();
+    const deadlineDate = new Date(Date.now() + meta.sla * 3600 * 1000);
+    const deadlineStr = `${deadlineDate.toISOString().replace('T', ' ').slice(0, 19)} UTC`;
+
+    const newIncident: MasterIncident = {
+      id: `cp-${nextNum}-master-uuid`,
+      tracking_number: trackingNumber,
+      title: title,
+      category: cat,
+      priority: meta.priority,
+      risk_score: meta.risk,
+      status: 'VERIFIED',
+      latitude: lat,
+      longitude: lon,
+      address_display: `Near ${zone.zone_name.split('—')[1]?.trim() || 'Central Sector'}, (${lat.toFixed(4)}, ${lon.toFixed(4)})`,
+      zone_id: zone.zone_id,
+      zone_name: zone.zone_name,
+      assigned_department: meta.dept,
+      sla_hours: meta.sla,
+      sla_deadline: deadlineStr,
+      sla_breached: false,
+      created_at: `${nowIso.replace('T', ' ').slice(0, 19)} UTC`,
+      updated_at: `${nowIso.replace('T', ' ').slice(0, 19)} UTC`,
+      report_count: 1,
+      community_upvotes: 1,
+      duplicate_match_confidence: 0,
+      reports: [
+        {
+          id: `rep-${Date.now()}`,
+          reporter_alias: formData.reporter_alias || (currentUser ? `${currentUser.full_name} (${currentUser.phone_number})` : 'Citizen Civic Inspector'),
+          phone_masked: currentUser ? currentUser.phone_number.replace(/(\d{3})\d{4}(\d{3})/, '$1****$2') : '+91 98*** **321',
+          submitted_at: 'Just now',
+          latitude: lat,
+          longitude: lon,
+          media_url: formData.media_url || '/images/road_pothole_before.jpg',
+          media_type: formData.media_type || 'PHOTO',
+          extracted_frames: [],
+          original_audio_script: formData.audio_script || rawText || title,
+          detected_language: formData.detected_language || 'en',
+          translated_english_text: formData.translated_english || rawText || title,
+          extracted_urgency_keywords: ['citizen report', 'verified defect', 'civic hazard'],
+          phash: '3f8a9c1e7b2d5a42',
+          evidence_confidence: 94.0,
+          evidence_tier: 'HIGH' as const,
+          location_consistency: 'HIGH' as const,
+          image_quality: 'GOOD' as const,
+          flagged_for_human_review: false,
+          review_reason: null
+        }
+      ],
+      audit_logs: [
+        {
+          id: `log-${Date.now()}-1`,
+          timestamp: `${nowIso.replace('T', ' ').slice(0, 19)} UTC`,
+          actor: 'Citizen Ingestion Gateway',
+          actor_role: 'CITIZEN',
+          action: 'REPORT_SUBMITTED',
+          details: `Filed by ${formData.reporter_alias || 'Citizen'} with GPS (${lat}, ${lon}) & image evidence. Description: "${rawText.slice(0, 60)}"`,
+          cryptographic_hash: `SHA256-${Math.random().toString(16).substring(2, 10)}`
+        },
+        {
+          id: `log-${Date.now()}-2`,
+          timestamp: `${nowIso.replace('T', ' ').slice(0, 19)} UTC`,
+          actor: 'LangGraph Orchestrator & YOLO Engine',
+          actor_role: 'SYSTEM',
+          action: 'INCIDENT_VERIFIED',
+          details: `Autonomous verification complete. Routed to ${meta.dept}. SLA timer started (${meta.sla}h deadline).`,
+          cryptographic_hash: `SHA256-${Math.random().toString(16).substring(2, 10)}`
+        }
+      ],
+      xai: {
+        base_severity: Math.round(meta.risk * 0.4),
+        proximity_penalty: 15,
+        traffic_importance: 20,
+        worsening_trend: 10,
+        total_risk_score: meta.risk,
+        summary_narrative: `AI verified ${cat.replace(/_/g, ' ')} from citizen submission. Explainable AI risk computed at ${meta.risk}/100.`,
+        deduplication_reason: 'Evaluated as unique civic incident; no active reports within spatial threshold.',
+        jurisdiction_rule: `Automatically routed to ${meta.dept} under Municipal ${zone.zone_code}.`
+      }
+    };
+
+    setIncidents((prev) => [newIncident, ...prev]);
+    setSelectedIncident(newIncident);
+    setKpi((prev) => ({
+      ...prev,
+      total_reports: prev.total_reports + 1,
+      pending_incidents: prev.pending_incidents + 1,
+      verified_incidents: prev.verified_incidents + 1,
+      critical_incidents: meta.priority === 'P1_CRITICAL' ? prev.critical_incidents + 1 : prev.critical_incidents
+    }));
+
+    return { status: 'CREATED', trackingNumber: trackingNumber, isDuplicate: false };
+  }, [incidents, currentUser, selectIncidentByTracking]);
 
   // Officer Verify Repair
   const verifyRepair = useCallback(async (trackingNumber: string, afterImageUrl: string, lat: number, lon: number) => {

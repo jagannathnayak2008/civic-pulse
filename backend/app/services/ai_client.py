@@ -35,7 +35,8 @@ class AIClient:
         media_url: str = "",
         reporter_alias: str = "Citizen A",
         active_incidents: Optional[List[Dict[str, Any]]] = None,
-        is_recycled_test: bool = False
+        is_recycled_test: bool = False,
+        category: Optional[str] = None
     ) -> Dict[str, Any]:
         """Runs the LangGraph verification pipeline."""
         if self.remote_url:
@@ -50,7 +51,8 @@ class AIClient:
                     "media_url": media_url,
                     "reporter_alias": reporter_alias,
                     "active_incidents": active_incidents or [],
-                    "is_recycled_test": is_recycled_test
+                    "is_recycled_test": is_recycled_test,
+                    "category": category
                 }).encode("utf-8")
                 req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
                 with urllib.request.urlopen(req, timeout=10) as resp:
@@ -68,7 +70,8 @@ class AIClient:
             media_url=media_url,
             reporter_alias=reporter_alias,
             active_incidents=active_incidents,
-            is_recycled_test=is_recycled_test
+            is_recycled_test=is_recycled_test,
+            category=category
         )
 
     def verify_repair(

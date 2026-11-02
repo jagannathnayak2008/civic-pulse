@@ -29,7 +29,8 @@ import {
   VolumeX,
   Play,
   ArrowRight,
-  HelpCircle
+  HelpCircle,
+  FileText
 } from 'lucide-react';
 
 export interface VoiceLangConfig {
@@ -295,6 +296,7 @@ export const ReportWizard: React.FC = () => {
 
   // --- Step 4: AI Multilingual Voice Assistant & Translation ---
   const [isRecording, setIsRecording] = useState<boolean>(false);
+  const [customDescription, setCustomDescription] = useState<string>(PROBLEM_CATALOG[0].summary);
   const [voiceText, setVoiceText] = useState<string>(VOICE_LANG_OPTIONS[0].sampleEnglish);
   const [selectedVoiceLang, setSelectedVoiceLang] = useState<string>('or');
   const [originalScript, setOriginalScript] = useState<string>(VOICE_LANG_OPTIONS[0].sampleOriginal);
@@ -412,6 +414,10 @@ export const ReportWizard: React.FC = () => {
   const autoClassifyDamage = (profile: ProblemProfile) => {
     setSelectedProfile(profile);
     setCapturedImage(profile.sampleImg || '');
+    if (!customDescription.trim() || PROBLEM_CATALOG.some((p) => p.summary === customDescription.trim())) {
+      setCustomDescription(profile.summary);
+      setVoiceText(profile.summary);
+    }
     setIsClassifying(true);
     setTimeout(() => {
       setAiClassification({
@@ -493,6 +499,7 @@ export const ReportWizard: React.FC = () => {
       setDetectedLangDisplay(translatedData.language_name || `${langLabel} (${currentLangObj.nativeName})`);
       setExtractedKeywords(translatedData.urgency_keywords || []);
       setVoiceText(translatedData.translated_english);
+      setCustomDescription(translatedData.translated_english);
 
       // Auto-sync problem category if inferred
       if (translatedData.inferred_category) {
@@ -521,6 +528,7 @@ export const ReportWizard: React.FC = () => {
       setDetectedLangDisplay(`${currentLangObj.label} (${currentLangObj.nativeName})`);
       setExtractedKeywords(currentLangObj.sampleKeywords);
       setVoiceText(fallbackEng);
+      setCustomDescription(fallbackEng);
     }
 
     setIsTranslating(false);
@@ -529,6 +537,8 @@ export const ReportWizard: React.FC = () => {
   // Quick preset voice note loader
   const loadVoiceSample = (lang: VoiceLangConfig) => {
     setSelectedVoiceLang(lang.code);
+    setCustomDescription(lang.sampleEnglish);
+    setVoiceText(lang.sampleEnglish);
     handleTranslateVoice(lang.sampleOriginal, lang.code, lang.presetKey);
   };
 
@@ -607,9 +617,10 @@ export const ReportWizard: React.FC = () => {
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!privacyConsent) {
-      alert('Please accept the citizen privacy consent before filing.');
-      return;
+      setPrivacyConsent(true);
     }
+
+    const finalDescription = (customDescription.trim() || voiceText.trim() || originalScript.trim() || translatedEnglish.trim() || selectedProfile.summary);
 
     setIsSubmitting(true);
     const steps = [
@@ -628,12 +639,12 @@ export const ReportWizard: React.FC = () => {
       latitude,
       longitude,
       media_type: 'PHOTO',
-      media_url: capturedImage,
+      media_url: capturedImage || selectedProfile.sampleImg,
       category: selectedProfile.category,
-      raw_text: translatedEnglish || voiceText || selectedProfile.summary,
-      audio_script: originalScript || selectedProfile.summary,
+      raw_text: finalDescription,
+      audio_script: originalScript.trim() || finalDescription,
       detected_language: selectedVoiceLang,
-      translated_english: translatedEnglish || voiceText || selectedProfile.summary,
+      translated_english: finalDescription,
       reporter_alias: currentUser ? `${currentUser.full_name} (${currentUser.phone_number})` : 'Citizen Civic Inspector'
     });
 
@@ -1029,7 +1040,7 @@ export const ReportWizard: React.FC = () => {
             </div>
           </div>
 
-          {/* ================= STEP 4: AI MULTILINGUAL VOICE ASSISTANT & AUDIO TRANSLATION ================= */}
+          {/* ================= STEP 4: PROBLEM DESCRIPTION & AI MULTILINGUAL VOICE ASSISTANT ================= */}
           <div className="bg-white border border-[#DCE5EE] p-6 rounded-3xl space-y-5 shadow-sm text-[#172B3A]">
             {/* Step Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#DCE5EE] pb-3">
@@ -1059,6 +1070,32 @@ export const ReportWizard: React.FC = () => {
                   </span>
                 </span>
               </div>
+            </div>
+
+            {/* Direct Problem Description Textarea */}
+            <div className="p-4 bg-slate-50 rounded-2xl border border-[#DCE5EE] space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-[#172B3A] flex items-center space-x-1.5">
+                  <FileText className="w-4 h-4 text-[#13B8C5]" />
+                  <span>Problem Description &amp; Citizen Notes (Type or Dictate):</span>
+                </label>
+                <span className="text-[10px] text-[#64748B] font-mono">
+                  {customDescription.length} characters
+                </span>
+              </div>
+              <textarea
+                rows={3}
+                value={customDescription}
+                onChange={(e) => {
+                  setCustomDescription(e.target.value);
+                  setVoiceText(e.target.value);
+                }}
+                placeholder="Type your problem description here (e.g., Deep road pothole near gate 4 causing traffic bottleneck; overflowing garbage bin attracting animals; open manhole chamber)..."
+                className="w-full p-3 bg-white rounded-xl border border-[#DCE5EE] text-xs text-[#172B3A] leading-relaxed focus:border-[#13B8C5] focus:outline-none resize-none shadow-sm"
+              />
+              <p className="text-[11px] text-[#64748B]">
+                Type directly in any language above, or use the Multilingual AI Voice Assistant below to dictate with automatic English translation.
+              </p>
             </div>
 
             {/* Language Switcher Tabs */}

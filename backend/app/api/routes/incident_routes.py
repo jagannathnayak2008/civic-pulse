@@ -76,6 +76,7 @@ async def submit_report(payload: Dict[str, Any] = Body(...)):
     Accepts text, audio preset (EN/HI/OR/BN/TE), coordinates, media type, and executes LangGraph orchestrator.
     """
     raw_text = payload.get("raw_text", "")
+    category = payload.get("category", None)
     audio_preset = payload.get("audio_preset", "odia_pothole")
     latitude = float(payload.get("latitude", 20.2961))
     longitude = float(payload.get("longitude", 85.8245))
@@ -93,7 +94,8 @@ async def submit_report(payload: Dict[str, Any] = Body(...)):
         media_url=media_url,
         reporter_alias=reporter_alias,
         active_incidents=incident_service.get_all_incidents(),
-        is_recycled_test=is_recycled_test
+        is_recycled_test=is_recycled_test,
+        category=category
     )
 
     incident_service.kpi["total_reports"] += 1

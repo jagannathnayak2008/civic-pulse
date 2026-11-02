@@ -363,3 +363,4 @@ CivicPulse includes a production-ready [`render.yaml`](file:///c:/Users/nictn/On
 * **FastAPI Web Service:** `pip install -r requirements.txt` ➔ `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
 * **Static Frontend Site:** `npm install && npm run build` ➔ Publish directory: `dist`
 * **PostgreSQL Database:** Managed relational storage.
+

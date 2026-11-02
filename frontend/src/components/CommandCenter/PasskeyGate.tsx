@@ -97,3 +97,4 @@ export const PasskeyGate: React.FC<PasskeyGateProps> = ({ onUnlock, onCancel }) 
     </div>
   );
 };
+
